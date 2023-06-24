@@ -52,6 +52,18 @@ def points(n: int) -> np.ndarray:
     return v
 
 
+def points_shifted(n: int, a: float, c: float) -> np.ndarray:
+    return (c + a) / 2 + points(n) * (c - a) / 2
+
+
+def cheb_values(f, n: int) -> np.ndarray:
+    return np.array(list(map(f, points(n))))
+
+
+def cheb_values_shifted(f, a, c, n: int) -> np.ndarray:
+    return np.array(list(map(f, points_shifted(n, a, c))))
+
+
 def cheb_expand(f, n: int) -> np.ndarray:
     """
     Interpolate a function on n chebyshev points using linear combination of chebyshev polynomials:
@@ -72,6 +84,53 @@ def cheb_expand(f, n: int) -> np.ndarray:
             s += f(ts[j-1]) * cheb_poly_value(k, j, n)
         result[k] = s * 2 / n
     return result
+
+
+def cheb_expand_raw(fs) -> np.ndarray:
+    """
+    Interpolate a function on n chebyshev points using linear combination of chebyshev polynomials:
+        sum_0^{n-1} a_k T_k(x)
+    where
+        T_k(cos theta) = cos(k theta)
+    are chebyshev polynomials.
+    :param fs: function values at chebyshev points
+    :return: an array consisting of interpolating coefficients a_0 ... a_{n-1}
+    """
+    n = len(fs)
+    result = np.zeros(n)
+    result[0] = sum(fs) / n
+    for k in range(1, n):
+        s = 0
+        for j in range(1, n+1):
+            s += fs[j-1] * cheb_poly_value(k, j, n)
+        result[k] = s * 2 / n
+    return result
+
+
+def cheb_quad_raw(fs) -> float:
+    cs = cheb_expand_raw(fs)
+    n = len(cs)
+    s = 0
+    for k in range(0, n):
+        if k % 2 == 0:
+            s += 2 * cs[k] / (1 - k*k)
+    return s
+
+
+def cheb_quad_raw_shifted(fs, a: float, c: float) -> float:
+    return cheb_quad_raw(fs) * (c - a) / 2
+
+
+def cheb_quad(f, n: int) -> float:
+    pts = points(n)
+    fs = list(map(f, pts))
+    return cheb_quad_raw(fs)
+
+
+def cheb_quad_shifted(f, a: float, c: float, n: int) -> float:
+    pts = points_shifted(n, a, c)
+    fs = list(map(f, pts))
+    return cheb_quad_raw_shifted(fs, a, c)
 
 
 def expand_quad_l(f, n):
@@ -203,15 +262,48 @@ def solve_matrix_basic(phi_l, phi_r, g_l, g_r, n):
     :return: the matrix A
     """
     cheb_pts = points(n)
+
     d = np.zeros((n, n))
     for i in range(0, n):
         d[i, i] = g_l(cheb_pts[i])
-    m = np.matmul(matrix_1(n), d)
-    m = np.matmul(matrix_2l(n), m)
-    m = np.matmul(matrix_3(n), m)
+    m1 = np.matmul(matrix_1(n), d)
+    m1 = np.matmul(matrix_2l(n), m1)
+    m1 = np.matmul(matrix_3(n), m1)
+    d1 = np.zeros((n, n))
+    for i in range(0, n):
+        d1[i, i] = phi_l(cheb_pts[i])
+    m1 = np.matmul(d1, m1)
+
+    d = np.zeros((n, n))
+    for i in range(0, n):
+        d[i, i] = g_r(cheb_pts[i])
+    m2 = np.matmul(matrix_1(n), d)
+    m2 = np.matmul(matrix_2r(n), m2)
+    m2 = np.matmul(matrix_3(n), m2)
     d2 = np.zeros((n, n))
     for i in range(0, n):
-        d2[i, i] = phi_l(cheb_pts[i])
-    m = np.matmul(d2, m)
-    m = np.eye(n) + m
+        d2[i, i] = phi_r(cheb_pts[i])
+    m2 = np.matmul(d2, m2)
+
+    m = np.eye(n) + m1 + m2
     return m
+
+
+def solve_matrix(phi_l, phi_r, g_l, g_r, b1, b2, n):
+    """
+    Instead of working on standard interval [-1, 1],
+    we now work on [b1, b2]
+    :param phi_l:
+    :param phi_r:
+    :param g_l:
+    :param g_r:
+    :param b1:
+    :param b2:
+    :param n:
+    :return:
+    """
+    k, m = (b2 - b1) / 2, (b2 + b1) / 2
+    phi_l_new, phi_r_new = lambda x: k * phi_l(k * x + m), lambda x: k * phi_r(k * x + m)
+    g_l_new, g_r_new = lambda x: g_l(k * x + m), lambda x: g_r(k * x + m)
+    mat = solve_matrix_basic(phi_l_new, phi_r_new, g_l_new, g_r_new, n)
+    return mat
