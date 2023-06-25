@@ -26,6 +26,7 @@ class BTree:
         self.abd_filled = self.lambda_filled = False
         self.operator = None
         self.p_inv_phi_l_values, self.p_inv_phi_r_values, self.p_inv_f_values = None, None, None
+        self.monitor = 0
 
     def is_root(self):
         return self.parent is None
@@ -38,6 +39,27 @@ class BTree:
 
     def is_right(self):
         return not self.is_root() and self == self.parent.right
+
+    def remove_children(self):
+        self.left = self.right = None
+
+    def get_leaves(self):
+        return get_leaves(self)
+
+    def foreach_node_bottom_up(self, f):
+        if not self.is_leaf():
+            self.left.foreach_node_bottom_up(f)
+            self.right.foreach_node_bottom_up(f)
+        f(self)
+
+    def foreach_node_up_bottom(self, f):
+        f(self)
+        if not self.is_leaf():
+            self.left.foreach_node_up_bottom(f)
+            self.right.foreach_node_up_bottom(f)
+
+    def clear_fill_flag(self):
+        self.abd_filled = self.lambda_filled = False
 
     def fill_abd_leaf(self):
         """
@@ -73,35 +95,39 @@ class BTree:
         if self.is_leaf():
             self.fill_abd_leaf()
         else:
-            self.left.fill_abd()
-            self.right.fill_abd()
-            d = 1 - self.right.alpha_r * self.left.beta_l
+            left, right = self.left, self.right
+            left.fill_abd()
+            right.fill_abd()
+            d = 1 - right.alpha_r * left.beta_l
             self.alpha_l = \
-                (1 - self.right.alpha_l) * (self.left.alpha_l - self.left.beta_l * self.right.alpha_r) / d \
+                (1 - right.alpha_l) * (left.alpha_l - left.beta_l * right.alpha_r) / d \
                 + self.right.alpha_l
             self.alpha_r = \
-                self.right.alpha_r * (1 - self.left.beta_r) * (1 - self.left.alpha_l) / d + self.left.alpha_r
+                right.alpha_r * (1 - left.beta_r) * (1 - left.alpha_l) / d + left.alpha_r
             self.beta_l = \
-                self.left.beta_l * (1 - self.right.beta_r) * (1 - self.right.alpha_l) / d + self.right.beta_l
+                left.beta_l * (1 - right.beta_r) * (1 - right.alpha_l) / d + right.beta_l
             self.beta_r = \
-                (1 - self.left.beta_r) * (self.right.beta_r - self.left.beta_l * self.right.alpha_r) / d \
-                + self.left.beta_r
-            self.delta_l = (1 - self.right.alpha_l) * self.left.delta_l / d + self.right.delta_l \
-                + (self.right.alpha_l - 1) * self.left.beta_l * self.right.delta_r / d
-            self.delta_r = (1 - self.left.beta_r) * self.right.delta_r / d + self.left.delta_r \
-                + (self.left.beta_r - 1) * self.right.alpha_r * self.left.delta_l / d
+                (1 - left.beta_r) * (right.beta_r - left.beta_l * right.alpha_r) / d \
+                + left.beta_r
+            self.delta_l = (1 - right.alpha_l) * left.delta_l / d + right.delta_l \
+                + (right.alpha_l - 1) * left.beta_l * right.delta_r / d
+            self.delta_r = (1 - left.beta_r) * right.delta_r / d + left.delta_r \
+                + (left.beta_r - 1) * right.alpha_r * left.delta_l / d
             self.abd_filled = True
+        assert self.abd_filled
 
     def fill_lambda_root(self):
         self.mu_l = self.mu_r = 0
         self.lambda_filled = True
 
     def fill_lambda(self):
-        if self.is_leaf():
-            return
-
         if self.is_root():
             self.fill_lambda_root()
+
+        assert self.lambda_filled
+
+        if self.is_leaf():
+            return
 
         self.left.mu_l = self.mu_l
         self.right.mu_r = self.mu_r
@@ -123,6 +149,11 @@ class BTree:
     def fill(self):
         self.fill_abd()
         self.fill_lambda()
+        # compute the monitor function
+        leaves = self.get_leaves()[0]
+        for leaf in leaves:
+            sigma_cs = cheb.cheb_expand_raw(leaf.sigma_values())
+            leaf.monitor = np.abs(sigma_cs[self.n - 2]) + np.abs(sigma_cs[self.n - 1] - sigma_cs[self.n - 3])
 
     def sigma_values(self) -> np.ndarray:
         if not self.is_leaf():
@@ -149,7 +180,8 @@ class BTree:
         return f'alpha_l={self.alpha_l}, alpha_r={self.alpha_r} ' \
             + f'beta_l={self.beta_l}, beta_r={self.beta_r} ' \
             + f'delta_l={self.delta_l}, delta_r={self.delta_r} ' \
-            + f'mu_l={self.mu_l}, mu_r={self.mu_r} '
+            + f'mu_l={self.mu_l}, mu_r={self.mu_r} ' \
+            + f'abd_filled={self.abd_filled}, lambda_filled={self.lambda_filled}'
 
     def __str__(self):
         return ("root " if self.is_root() else "") + "{ " + f'left: {self.left}, right: {self.right} ' \
@@ -192,3 +224,11 @@ def get_leaves(node: BTree) -> tuple:
         pts.extend(result_l[1])
         pts.extend(result_r[1])
         return leaves, pts
+
+
+def get_s_div(node: BTree, c: float) -> float:
+    m = 0
+    for leaf in get_leaves(node)[0]:
+        if leaf.monitor > m:
+            m = leaf.monitor
+    return m / np.exp2(c)
