@@ -46,15 +46,16 @@ class BVPSystem:
         else:
             return self.g_l(t) * self.g_r(x) / self.s
 
-    def operator_matrix(self, n: int) -> np.ndarray:
-        return cheb.solve_matrix(lambda x: self.phi_l(x), lambda x: self.phi_r(x),
-                                 lambda x: self.g_l(x), lambda x: self.g_r(x),
-                                 self.a, self.c, n)
+    def operator_matrix(self, b1: float, b2: float, n: int) -> np.ndarray:
+        mat = cheb.solve_matrix(lambda x: self.phi_l(x), lambda x: self.phi_r(x),
+                                lambda x: self.g_l(x), lambda x: self.g_r(x),
+                                b1, b2, n)
+        return mat
 
     def solve_brute(self, n: int) -> np.ndarray:
         pts = cheb.points_shifted(n, self.a, self.c)
         f_values = np.array(list(map(self.f, pts))).transpose()
-        mat = self.operator_matrix(n)
+        mat = self.operator_matrix(self.a, self.c, n)
         sigma = np.linalg.solve(mat, f_values)
         green_mat = np.zeros((n, n))
         result = np.zeros(n)
@@ -65,4 +66,3 @@ class BVPSystem:
             v = np.multiply(green_mat[i, :], sigma)
             result[i] = cheb.cheb_quad_raw_shifted(v, self.a, self.c)
         return result
-
