@@ -1,6 +1,5 @@
 import numpy as np
-import bvp
-import btree
+from . import bvp, btree
 
 
 class Solver:

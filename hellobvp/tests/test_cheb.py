@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from hellobvp import cheb
+from .. import cheb
 import helper
 
 zero_f = helper.zero_f
@@ -35,12 +35,12 @@ def test_expand():
     helper.fuzzy_zero(cheb.cheb_expand(lambda x: 1, 100), np.array([1] + [0] * 99))
     helper.fuzzy_zero(cheb.cheb_expand(lambda x: x, 2), np.array([0, 1]))
     helper.fuzzy_zero(cheb.cheb_expand(lambda x: x, 100), np.array([0, 1] + [0] * 98))
-    helper.fuzzy_zero(cheb.cheb_expand(lambda x: x+1, 2), np.array([1, 1]))
-    helper.fuzzy_zero(cheb.cheb_expand(lambda x: 2*x*x-1, 3), np.array([0, 0, 1]))
-    helper.fuzzy_zero(cheb.cheb_expand(lambda x: 2*x*x, 3), np.array([1, 0, 1]))
-    helper.fuzzy_zero(cheb.cheb_expand(lambda x: 4*x*x*x - 3*x, 4), np.array([0, 0, 0, 1]))
-    helper.fuzzy_zero(cheb.cheb_expand(lambda x: 4*x*x*x - 3*x, 100), np.array([0, 0, 0, 1] + [0] * 96))
-    helper.fuzzy_zero(cheb.cheb_expand(lambda x: 4*x*x*x + x + 1, 4), np.array([1, 4, 0, 1]))
+    helper.fuzzy_zero(cheb.cheb_expand(lambda x: x + 1, 2), np.array([1, 1]))
+    helper.fuzzy_zero(cheb.cheb_expand(lambda x: 2 * x * x - 1, 3), np.array([0, 0, 1]))
+    helper.fuzzy_zero(cheb.cheb_expand(lambda x: 2 * x * x, 3), np.array([1, 0, 1]))
+    helper.fuzzy_zero(cheb.cheb_expand(lambda x: 4 * x * x * x - 3 * x, 4), np.array([0, 0, 0, 1]))
+    helper.fuzzy_zero(cheb.cheb_expand(lambda x: 4 * x * x * x - 3 * x, 100), np.array([0, 0, 0, 1] + [0] * 96))
+    helper.fuzzy_zero(cheb.cheb_expand(lambda x: 4 * x * x * x + x + 1, 4), np.array([1, 4, 0, 1]))
 
 
 def test_expand_quad_l():
@@ -54,8 +54,8 @@ def test_expand_quad_l():
     helper.fuzzy_zero(cheb.expand_quad_l(lambda x: 1, 100), np.array([1, 1] + [0] * 98))
 
     # 4x -> 2x^2 - 2
-    helper.fuzzy_zero(cheb.expand_quad_l(lambda x: 4*x, 3), np.array([-1, 0, 1]))
-    helper.fuzzy_zero(cheb.expand_quad_l(lambda x: 4*x, 100), np.array([-1, 0, 1] +[0] * 97))
+    helper.fuzzy_zero(cheb.expand_quad_l(lambda x: 4 * x, 3), np.array([-1, 0, 1]))
+    helper.fuzzy_zero(cheb.expand_quad_l(lambda x: 4 * x, 100), np.array([-1, 0, 1] + [0] * 97))
 
 
 def test_expand_quad_r():
@@ -69,8 +69,8 @@ def test_expand_quad_r():
     helper.fuzzy_zero(cheb.expand_quad_r(lambda x: 1, 100), np.array([1, -1] + [0] * 98))
 
     # 4x -> 2 - 2x^2
-    helper.fuzzy_zero(cheb.expand_quad_r(lambda x: 4*x, 3), np.array([1, 0, -1]))
-    helper.fuzzy_zero(cheb.expand_quad_r(lambda x: 4*x, 100), np.array([1, 0, -1] +[0] * 97))
+    helper.fuzzy_zero(cheb.expand_quad_r(lambda x: 4 * x, 3), np.array([1, 0, -1]))
+    helper.fuzzy_zero(cheb.expand_quad_r(lambda x: 4 * x, 100), np.array([1, 0, -1] + [0] * 97))
 
 
 def test_solve_basic_01():

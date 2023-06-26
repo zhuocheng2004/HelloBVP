@@ -1,6 +1,5 @@
 import numpy as np
-
-import cheb
+from . import cheb
 
 
 class BVPSystem:

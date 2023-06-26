@@ -30,7 +30,19 @@ def cheb_poly_value(k: int, j: int, n: int):
     :param n: total number of cheb points
     :return: result
     """
-    return np.cos(k * (2*n-2*j+1) * np.pi / (2*n))
+    # look through the cache
+    if n in cheb_poly_cache:
+        # print('cache hit')
+        values = cheb_poly_cache[n]
+    else:
+        values = np.zeros(4 * n)
+        for i in range(4 * n):
+            values[i] = np.cos(i * np.pi / (2*n))
+        cheb_poly_cache[n] = values
+
+    t = k * (2*n-2*j+1)
+    t = t % (4 * n)
+    return values[t]
 
 
 def points(n: int) -> np.ndarray:
@@ -39,9 +51,9 @@ def points(n: int) -> np.ndarray:
     :param n: the number of points we want to generate.
     :return: a numpy row-vector containing n chebyshev points.
     """
-    n = int(n)
     # look through the cache
     if n in cheb_points_cache:
+        # print('cache hit')
         return cheb_points_cache[n]
 
     if n <= 0:

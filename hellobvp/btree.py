@@ -1,6 +1,5 @@
 import numpy as np
-import cheb
-import bvp
+from . import cheb, bvp
 
 
 class BTree:
