@@ -33,4 +33,3 @@ sigma = np.linalg.solve(mat, f_values)
 plt.plot(pts, sigma)
 
 plt.show()
-

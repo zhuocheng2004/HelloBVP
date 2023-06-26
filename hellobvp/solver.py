@@ -19,7 +19,7 @@ class Solver:
         leaves = self.tree.get_leaves()[0]
         s_div = btree.get_s_div(self.tree, self.c)
         last_leaf = None
-        print(len(leaves))
+        print("Number of leaves:", len(leaves))
         for leaf in leaves:
             leaf.abd_filled = True
             if leaf.monitor >= s_div:

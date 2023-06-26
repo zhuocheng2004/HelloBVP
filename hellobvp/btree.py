@@ -113,6 +113,8 @@ class BTree:
                 + (right.alpha_l - 1) * left.beta_l * right.delta_r / d
             self.delta_r = (1 - left.beta_r) * right.delta_r / d + left.delta_r \
                 + (left.beta_r - 1) * right.alpha_r * left.delta_l / d
+            # These really work,
+            # as I've tested, removing any of them results in incorrect result.
             self.abd_filled = True
         assert self.abd_filled
 
@@ -142,6 +144,8 @@ class BTree:
         u = np.linalg.solve(m, v)
         self.left.mu_r, self.right.mu_l = u[0, 0], u[1, 0]
         self.left.lambda_filled = self.right.lambda_filled = True
+        # These really work,
+        # as I've tested, removing any of them results in incorrect result.
 
         self.left.fill_lambda()
         self.right.fill_lambda()
