@@ -2,7 +2,9 @@ from functools import partial
 import numpy as np
 
 
-# TODO: doesn't work
+# caches,
+# but it seems that they do little acceleration
+# compared to python's slowness
 cheb_points_cache = {}
 cheb_poly_cache = {}
 
@@ -65,14 +67,23 @@ def points(n: int) -> np.ndarray:
 
 
 def points_shifted(n: int, a: float, c: float) -> np.ndarray:
+    """
+    :return: n chebyshev points inside interval [a, c]
+    """
     return (c + a) / 2 + points(n) * (c - a) / 2
 
 
 def cheb_values(f, n: int) -> np.ndarray:
+    """
+    :return: evaluation result array on chebyshev points
+    """
     return np.array(list(map(f, points(n))))
 
 
 def cheb_values_shifted(f, a, c, n: int) -> np.ndarray:
+    """
+    :return: evaluation result array on chebyshev points inside [a, c]
+    """
     return np.array(list(map(f, points_shifted(n, a, c))))
 
 
