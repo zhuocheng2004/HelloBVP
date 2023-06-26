@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from .. import cheb
+from hellobvp import cheb
 import helper
 
 zero_f = helper.zero_f
