@@ -12,7 +12,7 @@ DVIPDF		?= dvipdf
 LATEX		?= latex
 PDFLATEX	?= pdflatex
 
-interobjexts	:= .aux .log .toc
+interobjexts	:= .aux .log .toc .out
 interobjs	:= $(addprefix $(MAIN), $(interobjexts))
 target		:= $(addsuffix .pdf, $(MAIN))
 

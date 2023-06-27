@@ -13,3 +13,4 @@ build/
 *.aux
 *.log
 *.toc
+*.out

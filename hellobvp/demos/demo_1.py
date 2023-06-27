@@ -36,8 +36,8 @@ real_values = list(map(g, pts))
 uh, tree, us = solver.solve(pts)
 # print(tree)
 
-steps = list(range(1, len(us)+1))
-errors = np.zeros(len(steps))
+steps = list(range(1, len(us)))
+errors = np.zeros(len(us))
 for k in range(0, len(us)):
     errors[k] = np.linalg.norm(us[k] - real_values)
 
@@ -53,7 +53,7 @@ plt.savefig('demo_1_1.png')
 plt.figure(2)
 plt.xlabel('refinement step')
 plt.ylabel('error')
-plt.semilogy(steps, errors)
+plt.semilogy(steps, errors[1:])
 
 plt.savefig('demo_1_2.png')
 

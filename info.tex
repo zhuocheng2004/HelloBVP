@@ -37,9 +37,9 @@
 \section{Introduction}
 Code could be viewed on:
 
-\url{https://github.com/zhuocheng2004/Numerical-Analysis-2023/tree/main/HW5}
+\url{https://git.tsinghua.edu.cn/chengz21/hello-bvp}
 
-\url{https://github.com/zhuocheng2004/Numerical-Analysis-2023/tree/main/HW5}
+\url{https://github.com/zhuocheng2004/HelloBVP}
 
 NOTICE: many things are in the comments of the code.
 
@@ -85,7 +85,9 @@ OS: Ubuntu/Linux 22.04 jammy
 
 Python: 3.10.4
 
-Numpy: 1.22.4
+NumPy: 1.22.4
+
+Matplotlib: 3.7.0
 
 \subsection{demo\_sigma}
 
@@ -136,7 +138,7 @@ Computing process ($L^\infty$ tolerance = $10^{-6}$):
 \begin{table}[H]
     \centering
     \begin{tabular}{l|r|r}
-        step & number of sub-intervals & relative error \\
+        step & number of sub-intervals & $L^\infty$ relative error \\
         \hline
         1  &  1 & 0.011721620601999605 \\
         2  &  2 & 0.002930405150499915 \\
@@ -182,7 +184,7 @@ Computing process ($L^\infty$ tolerance = $10^{-5}$):
 \begin{table}[H]
     \centering
     \begin{tabular}{l|r|r}
-        step & number of sub-intervals & relative error \\
+        step & number of sub-intervals & $L^\infty$ relative error \\
         \hline
         1  &   1 & 0.829452231623173 \\
         2  &   2 & 0.5111318209211012 \\
@@ -196,5 +198,8 @@ Computing process ($L^\infty$ tolerance = $10^{-5}$):
     \end{tabular}
     \caption{Refinement Process}
 \end{table}
+
+You can see that it's indeed adaptive, although something seemed to go wrong 
+(we shouldn't have so much subdivision).
 
 \end{document}
