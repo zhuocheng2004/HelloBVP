@@ -67,7 +67,7 @@ Demonstration of toy problem 1, 2
 
 # Build PDF
 
-Build the pdf, run make:
+To build the pdf, run make:
 ```bash
 $ make
 ```
@@ -90,7 +90,7 @@ $ cd tests/
 $ pytest
 ```
 
-Note: `xfail` means `expected failure`.
+Note: `xfail` means `expected failure`, which doesn't mean failure.
 
 # Data for demonstrations and examples
 Here is data for two test toy problems which are used 

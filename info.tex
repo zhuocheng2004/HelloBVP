@@ -24,7 +24,7 @@
 {\end{CJK}}
 
 \title{
-    {2023 Spring Numerical Analyisis Course Project}
+    {2023 Spring Numerical Analysis Course Project}
 }
 \author{\begin{Chinese}程卓\end{Chinese} (2021011617)}
 
@@ -40,6 +40,10 @@ Code could be viewed on:
 \url{https://git.tsinghua.edu.cn/chengz21/hello-bvp}
 
 \url{https://github.com/zhuocheng2004/HelloBVP}
+
+(equivalent)
+
+\bigskip
 
 NOTICE: many things are in the comments of the code.
 
@@ -69,10 +73,36 @@ I do not follow the algorithm directly presented in the article.
 Instead, I implemented it based on my own understanding.
 
 The resulting accuracy and speed are not very good, compared to that in the paper.
+As I started working on this project late,
 I have no time to investigate further.
 
-\section{Questions}
-\subsection{}
+\section{Programming Tasks}
+\subsection{Discretization of integral equation}
+See {\bf cheb.py}
+
+\subsection{Full Algorithm Implementation}
+I didn't follow exactly the algorithm written explicitly in the article.
+
+I implemented it based on my understanding.
+
+See {\bf cheb.py bvp.py btree.py solver.py}
+
+\subsection{Newton's Iteration for nonlinear equation}
+Not finished.
+
+\subsection{Binary Tree Structure}
+See {\bf btree.py}
+
+\section{Theoretical Questions}
+\subsection{Rank od matrix A}
+I'm not sure, but it seems that if we choose too many Chebyshev points, 
+the matrix will become near singular.
+
+\subsection{Initial Guess of Newton's Method}
+
+\subsection{Starr and Rokhlin}
+
+\subsection{Generalization to PDE}
 
 \section{Demos}
 
@@ -89,6 +119,11 @@ NumPy: 1.22.4
 
 Matplotlib: 3.7.0
 
+It seems that my program didn't behave well on the stiff problems in the article, 
+and I still don't know why.
+
+We used 64 sample points for the solution int demo\_1 and demo\_2 
+
 \subsection{demo\_sigma}
 
 This demo computes the function $\sigma$ in two ways: 
@@ -98,7 +133,7 @@ This demo computes the function $\sigma$ in two ways:
 2. cut the interval into $2^6 = 64$ sub-intervals using a 6-level binary tree.
 
 Note: in whole interval case, we use 32 Chebyshev points. 
-If we use more points, we might encounter 'singular matrix' when computing.
+If we use more points, we might encounter `singular matrix' error when computing.
 
 \begin{figure}[H]
 	\centering
@@ -133,20 +168,28 @@ $$
     \end{subfigure}
 \end{figure}
 
-Computing process ($L^\infty$ tolerance = $10^{-6}$):
+Running time: 13.509s
+
+Computing process ($L^\infty$ tolerance = $10^{-8}$):
+
+NOTE: the `relative error' is the estimated relative error during 
+computing process, not the relative error compared with the real solution.
 
 \begin{table}[H]
     \centering
     \begin{tabular}{l|r|r}
         step & number of sub-intervals & $L^\infty$ relative error \\
         \hline
-        1  &  1 & 0.011721620601999605 \\
-        2  &  2 & 0.002930405150499915 \\
-        3  &  4 & 0.0007326012876249788 \\
-        4  &  8 & 0.00018315032190635572 \\
-        5  & 16 & 4.578758047657505e-05 \\
-        6  & 32 & 1.1446895119615608e-05 \\
-        7  & 64 & 2.861723779834513e-06 \\
+        1  &   1 & 0.010929542363862177 \\
+        2  &   2 & 0.002732385590965558 \\
+        3  &   4 & 0.0006830963977413618 \\
+        4  &   8 & 0.00017077409943544453 \\
+        5  &  16 & 4.2693524858777865e-05 \\
+        6  &  32 & 1.0673381214965083e-05 \\
+        7  &  64 & 2.668345304712716e-06 \\
+        8  & 128 & 6.670863279545358e-07 \\
+        9  & 256 & 1.6677158029554384e-07 \\
+        10 & 512 & 4.1692901464607246e-08 \\
     \end{tabular}
     \caption{Refinement Process}
 \end{table}
@@ -179,6 +222,8 @@ $$
     \end{subfigure}
 \end{figure}
 
+Running time: 18.520s
+
 Computing process ($L^\infty$ tolerance = $10^{-5}$):
 
 \begin{table}[H]
@@ -186,20 +231,22 @@ Computing process ($L^\infty$ tolerance = $10^{-5}$):
     \begin{tabular}{l|r|r}
         step & number of sub-intervals & $L^\infty$ relative error \\
         \hline
-        1  &   1 & 0.829452231623173 \\
-        2  &   2 & 0.5111318209211012 \\
-        3  &   4 & 0.6073673296855024 \\
-        4  &   7 & 0.47093915469145464 \\
-        5  &  14 & 0.017375141481050405 \\
-        6  &  28 & 0.004070638153959535 \\
-        7  &  56 & 0.0008963125014674609 \\
-        8  & 109 & 0.0002365404017131197 \\
-        9  & 215 & 6.282202005296042e-05 \\
+        1  &   1 & 0.812113156745877 \\
+        2  &   2 & 0.5064112496456088 \\
+        3  &   4 & 0.610392895761098 \\
+        4  &   7 & 0.47235297036986823 \\
+        5  &  14 & 0.012047083860414618 \\
+        6  &  28 & 0.0029389703437309564 \\
+        7  &  56 & 0.0005390607459993711 \\
+        8  & 109 & 0.00012682070475158503 \\
+        9  & 215 & 5.151907746078857e-05 \\
+        10 & 426 & 3.055720983986894e-05 \\
+        11 & 845 & 2.823770749495437e-06 \\
     \end{tabular}
     \caption{Refinement Process}
 \end{table}
 
-You can see that it's indeed adaptive, although something seemed to go wrong 
+You can see that it's indeed somewhat adaptive, although apparently something seemed to go wrong
 (we shouldn't have so much subdivision).
 
 \end{document}

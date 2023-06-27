@@ -52,6 +52,12 @@ class BVPSystem:
         return mat
 
     def solve_brute(self, n: int) -> np.ndarray:
+        """
+        No sub-interval refinement,
+        solve using the whole interval directly
+        :param n: number of chebyshev points
+        :return: solution evaluated on cheb points
+        """
         pts = cheb.points_shifted(n, self.a, self.c)
         f_values = np.array(list(map(self.f, pts))).transpose()
         mat = self.operator_matrix(self.a, self.c, n)

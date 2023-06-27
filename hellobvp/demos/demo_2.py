@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from .. import bvp, solver
+from .. import bvp, solver, profiler
 from . import helper
 
 
@@ -16,13 +16,14 @@ def f(x):
     return 1
 
 
+profiler.reset()
 nogui = helper.nogui_from_args()
 
 n = 4
 a, c = 0, np.pi * 6
 bvp_sys = bvp.BVPSystem(a, c, p, q, f, np.array([[1, 0], [0, 1]]))
 
-solver = solver.Solver(bvp_sys, tol=1e-4)
+solver = solver.Solver(bvp_sys, tol=1e-5)
 
 
 # The actual solution
@@ -30,7 +31,7 @@ def g(x):
     return 1 - np.cos(x)
 
 
-pts = np.linspace(a, c, num=1000)
+pts = np.linspace(a, c, num=64)
 real_values = list(map(g, pts))
 
 uh, tree, us = solver.solve(pts)
@@ -53,10 +54,12 @@ plt.savefig('demo_2_1.png')
 
 plt.figure(2)
 plt.xlabel('refinement step')
-plt.ylabel('error')
+plt.ylabel('L2 error')
 plt.semilogy(steps, errors[1:])
 
 plt.savefig('demo_2_2.png')
+
+profiler.report()
 
 if not nogui:
     plt.show()

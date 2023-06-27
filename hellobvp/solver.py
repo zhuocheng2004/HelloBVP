@@ -1,5 +1,5 @@
 import numpy as np
-from . import bvp, btree
+from . import bvp, btree, profiler
 
 
 class Solver:
@@ -14,6 +14,11 @@ class Solver:
         return self.tree.solve(xs)
 
     def refine(self):
+        """
+        Refine the sub-intervals if necessary
+        :return: None
+        """
+        profiler.push('refine')
         self.tree.foreach_node_up_bottom(lambda node: node.clear_fill_flag())
         leaves = self.tree.get_leaves()[0]
         s_div = btree.get_s_div(self.tree, self.c)
@@ -37,8 +42,14 @@ class Solver:
 
         # re-compute all parameters
         self.tree.fill()
+        profiler.pop('refine')
 
     def solve(self, xs: np.ndarray) -> tuple:
+        """
+        The ultimate solver function
+        :param xs: points we want u(x) to evaluate on
+        :return: values of u(x) at xs
+        """
         us = []
         last_u = np.zeros((1, len(xs)))
 

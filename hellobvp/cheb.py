@@ -1,5 +1,7 @@
 from functools import partial
 import numpy as np
+# from numpy.polynomial.chebyshev import Chebyshev
+from . import profiler
 
 
 # caches,
@@ -37,10 +39,12 @@ def cheb_poly_value(k: int, j: int, n: int):
         # print('cache hit')
         values = cheb_poly_cache[n]
     else:
+        profiler.push('gen_cheb_poly_values')
         values = np.zeros(4 * n)
         for i in range(4 * n):
             values[i] = np.cos(i * np.pi / (2*n))
         cheb_poly_cache[n] = values
+        profiler.pop('gen_cheb_poly_values')
 
     t = k * (2*n-2*j+1)
     t = t % (4 * n)
@@ -58,11 +62,13 @@ def points(n: int) -> np.ndarray:
         # print('cache hit')
         return cheb_points_cache[n]
 
+    profiler.push('gen_cheb_points')
     if n <= 0:
         raise ValueError(f'Parameter n={n} should not be negative')
 
     v = np.array([np.cos((2 * n - 2 * k + 1) * np.pi / (2 * n)) for k in range(1, n + 1)])
     points_cache_add(n, v)
+    profiler.pop('gen_cheb_points')
     return v
 
 
@@ -98,6 +104,7 @@ def cheb_expand(f, n: int) -> np.ndarray:
     :param n: number of chebyshev points, used in points(n)
     :return: an array consisting of interpolating coefficients a_0 ... a_{n-1}
     """
+    profiler.push('cheb_expand')
     ts = points(n)
     result = np.zeros(n)
     result[0] = sum(map(f, ts)) / n
@@ -106,6 +113,7 @@ def cheb_expand(f, n: int) -> np.ndarray:
         for j in range(1, n+1):
             s += f(ts[j-1]) * cheb_poly_value(k, j, n)
         result[k] = s * 2 / n
+    profiler.pop('cheb_expand')
     return result
 
 
@@ -119,24 +127,36 @@ def cheb_expand_raw(fs) -> np.ndarray:
     :param fs: function values at chebyshev points
     :return: an array consisting of interpolating coefficients a_0 ... a_{n-1}
     """
+    # This function costs most time
+    profiler.push('cheb_expand_raw')
     n = len(fs)
     result = np.zeros(n)
-    result[0] = sum(fs) / n
     for k in range(1, n):
         s = 0
         for j in range(1, n+1):
             s += fs[j-1] * cheb_poly_value(k, j, n)
         result[k] = s * 2 / n
+    result[0] = sum(fs) / n
+    profiler.pop('cheb_expand_raw')
     return result
 
 
 def cheb_quad_raw(fs) -> float:
+    """
+    Do integration
+    given function values on Chebyshev points
+    :param fs: function values on Chebyshev points
+    :return: quadrature value
+    """
+    profiler.push('cheb_quad_raw')
     cs = cheb_expand_raw(fs)
+    # print(cs)
     n = len(cs)
     s = 0
     for k in range(0, n):
         if k % 2 == 0:
             s += 2 * cs[k] / (1 - k*k)
+    profiler.pop('cheb_quad_raw')
     return s
 
 
@@ -145,6 +165,13 @@ def cheb_quad_raw_shifted(fs, a: float, c: float) -> float:
 
 
 def cheb_quad(f, n: int) -> float:
+    """
+    Do integration
+    using n Chebyshev points
+    :param f: function to integrate
+    :param n: number of Chebyshev points
+    :return: quadrature value
+    """
     pts = points(n)
     fs = list(map(f, pts))
     return cheb_quad_raw(fs)
@@ -203,8 +230,9 @@ def matrix_1(n):
     """
     Used for chebyshev expansion
     :param n: number of cheb points
-    :return:
+    :return: the matrix for chebyshev expansion, applied to function values at cheb points
     """
+    profiler.push('gen_matrix_1')
     mat = np.zeros((n, n))
     for j in range(0, n):
         mat[0, j] = 1
@@ -212,6 +240,7 @@ def matrix_1(n):
         for j in range(0, n):
             mat[i, j] = 2 * cheb_poly_value(i, j+1, n)
     mat = mat / n
+    profiler.pop('gen_matrix_1')
     return mat
 
 
@@ -225,6 +254,7 @@ def matrix_2l(n):
     :param n:
     :return: matrix A
     """
+    profiler.push('gen_matrix_2l')
     mat = np.zeros((n+1, n+2))
     mat[1, 0], mat[1, 2] = 1, -1/2
     for i in range(2, n+1):
@@ -233,6 +263,7 @@ def matrix_2l(n):
         v = mat[i, :]
         mat[0, :] += (v if i % 2 == 1 else -v)
 
+    profiler.pop('gen_matrix_2l')
     return mat[:n, :n]
 
 
@@ -246,6 +277,7 @@ def matrix_2r(n):
     :param n:
     :return: matrix A
     """
+    profiler.push('gen_matrix_2r')
     mat = np.zeros((n+1, n+2))
     mat[1, 0], mat[1, 2] = -1, 1/2
     for i in range(2, n+1):
@@ -253,6 +285,7 @@ def matrix_2r(n):
     for i in range(1, n+1):
         mat[0, :] -= mat[i, :]
 
+    profiler.pop('gen_matrix_2r')
     return mat[:n, :n]
 
 
@@ -263,10 +296,13 @@ def matrix_3(n):
     :param n:
     :return: matrix
     """
+    profiler.push('gen_matrix_3')
     mat = np.zeros((n, n))
     for i in range(0, n):
         for j in range(0, n):
             mat[i, j] = cheb_poly_value(j, i+1, n)
+
+    profiler.pop('gen_matrix_3')
     return mat
 
 
@@ -325,8 +361,11 @@ def solve_matrix(phi_l, phi_r, g_l, g_r, b1, b2, n):
     :param n:
     :return:
     """
+    profiler.push('gen_solver_matrix')
     k, m = (b2 - b1) / 2, (b2 + b1) / 2
     phi_l_new, phi_r_new = lambda x: k * phi_l(k * x + m), lambda x: k * phi_r(k * x + m)
     g_l_new, g_r_new = lambda x: g_l(k * x + m), lambda x: g_r(k * x + m)
     mat = solve_matrix_basic(phi_l_new, phi_r_new, g_l_new, g_r_new, n)
+
+    profiler.pop('gen_solver_matrix')
     return mat

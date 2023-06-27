@@ -22,7 +22,7 @@ pngs		:= $(addsuffix .png, $(png_names))
 
 demo_py_files	:= $(shell find hellobvp/demos/ -name '*.py')
 
-other_build	:= build/ 
+other_build	:= build/ $(wildcard *-info/)
 
 export MAIN
 

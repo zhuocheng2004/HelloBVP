@@ -1,10 +1,10 @@
 import numpy as np
-from . import cheb, bvp
+from . import cheb, bvp, profiler
 
 
 class BTree:
     """
-    Each instance represents a node in the tree
+    Each instance represents a node in the binary tree
     """
     def __init__(self, byp_system: bvp.BVPSystem, a: float, c: float, n: int):
         """
@@ -16,7 +16,7 @@ class BTree:
         self.bvp_system = byp_system
         self.n = n
         self.parent = None
-        self.left = self.right = None
+        self.left = self.right = None   # children
         self.a, self.c = a, c
         self.alpha_l = self.alpha_r = 0
         self.beta_l = self.beta_r = 0
@@ -65,6 +65,7 @@ class BTree:
         Fill the alpha, beta, delta values for a leaf.
         :return: None
         """
+        profiler.push('fill_abd_leaf')
         mat = self.bvp_system.operator_matrix(self.a, self.c, self.n)
         self.operator = mat
         g_l_values = cheb.cheb_values_shifted(lambda x: self.bvp_system.g_l(x), self.a, self.c, self.n)
@@ -82,6 +83,7 @@ class BTree:
         self.delta_l = cheb.cheb_quad_raw_shifted(g_l_values * self.p_inv_f_values, self.a, self.c)
         self.delta_r = cheb.cheb_quad_raw_shifted(g_r_values * self.p_inv_f_values, self.a, self.c)
         self.abd_filled = True
+        profiler.pop('fill_abd_leaf')
 
     def fill_abd(self):
         """
@@ -97,6 +99,7 @@ class BTree:
             left, right = self.left, self.right
             left.fill_abd()
             right.fill_abd()
+            profiler.push('fill_abd_stem')
             d = 1 - right.alpha_r * left.beta_l
             self.alpha_l = \
                 (1 - right.alpha_l) * (left.alpha_l - left.beta_l * right.alpha_r) / d \
@@ -115,13 +118,22 @@ class BTree:
             # These really work,
             # as I've tested, removing any of them results in incorrect result.
             self.abd_filled = True
+            profiler.pop('fill_abd_stem')
         assert self.abd_filled
 
     def fill_lambda_root(self):
+        """
+        Fill lambda value for root node (i.e. whole interval)
+        :return: None
+        """
         self.mu_l = self.mu_r = 0
         self.lambda_filled = True
 
     def fill_lambda(self):
+        """
+        Fill all lambda/mu values for each node
+        :return: None
+        """
         if self.is_root():
             self.fill_lambda_root()
 
@@ -130,6 +142,7 @@ class BTree:
         if self.is_leaf():
             return
 
+        profiler.push('fill_lambda')
         self.left.mu_l = self.mu_l
         self.right.mu_r = self.mu_r
         v = np.array([
@@ -145,11 +158,17 @@ class BTree:
         self.left.lambda_filled = self.right.lambda_filled = True
         # These really work,
         # as I've tested, removing any of them results in incorrect result.
+        profiler.pop('fill_lambda')
 
         self.left.fill_lambda()
         self.right.fill_lambda()
 
     def fill(self):
+        """
+        Fill alpha, beta, delta, lambda and monitor parameters
+        :return: None
+        """
+        profiler.push('fill_parameters')
         self.fill_abd()
         self.fill_lambda()
         # compute the monitor function
@@ -157,8 +176,12 @@ class BTree:
         for leaf in leaves:
             sigma_cs = cheb.cheb_expand_raw(leaf.sigma_values())
             leaf.monitor = np.abs(sigma_cs[self.n - 2]) + np.abs(sigma_cs[self.n - 1] - sigma_cs[self.n - 3])
+        profiler.pop('fill_parameters')
 
     def sigma_values(self) -> np.ndarray:
+        """
+        :return: the values of sigma function (restricted on leaf) on cheb points
+        """
         if not self.is_leaf():
             raise ValueError('only work on leaves')
         if not self.lambda_filled or not self.abd_filled:
@@ -166,6 +189,11 @@ class BTree:
         return self.p_inv_f_values + self.mu_l * self.p_inv_phi_l_values + self.mu_r * self.p_inv_phi_r_values
 
     def solve(self, xs) -> np.ndarray:
+        """
+        :param xs: the points we want u(x) to evaluate on
+        :return: values of u(x) on xs
+        """
+        profiler.push('solve')
         leaves, _ = get_leaves(self)
         result = np.zeros(len(xs))
         for k in range(0, len(xs)):
@@ -177,9 +205,14 @@ class BTree:
                 v = np.multiply(green_values, leaf.sigma_values())
                 s += cheb.cheb_quad_raw_shifted(v, leaf.a, leaf.c)
             result[k] = s
+        profiler.pop('solve')
         return result
 
     def param_info(self):
+        """
+        Debug Util
+        :return: important parameters
+        """
         return f'alpha_l={self.alpha_l}, alpha_r={self.alpha_r} ' \
             + f'beta_l={self.beta_l}, beta_r={self.beta_r} ' \
             + f'delta_l={self.delta_l}, delta_r={self.delta_r} ' \
@@ -193,6 +226,14 @@ class BTree:
 
 
 def gen_btree_simple(bvp_system: bvp.BVPSystem, n: int, depth: int):
+    """
+    Generate a depth-level complete binary tree
+    :param bvp_system:
+    :param n: number of cheb points per leaf
+    :param depth: depth of subdivision
+    :return: the tree's root
+    """
+    profiler.push('gen_btree_simple')
     root = BTree(bvp_system, bvp_system.a, bvp_system.c, n)
     level_list = [root]
     for k in range(0, depth):
@@ -206,6 +247,7 @@ def gen_btree_simple(bvp_system: bvp.BVPSystem, n: int, depth: int):
             node.right.parent = node
             level_list.append(node.left)
             level_list.append(node.right)
+    profiler.pop('gen_btree_simple')
     return root
 
 

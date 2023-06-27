@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from .. import cheb, bvp, btree
+from .. import cheb, bvp, btree, profiler
 from . import helper
 
 
@@ -15,6 +15,8 @@ def one_f(x):
 nogui = helper.nogui_from_args()
 plt.xlabel('x')
 plt.ylabel('u(x)')
+
+profiler.reset()
 
 n = 4
 a, c = 0, np.pi * 4
@@ -40,5 +42,9 @@ plt.legend(loc='upper right')
 
 plt.savefig('demo_sigma.png')
 
+
+profiler.report()
+
 if not nogui:
     plt.show()
+
