@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from .. import bvp, solver
+from . import helper
 
 
 def p(x):
@@ -14,6 +15,8 @@ def q(x):
 def f(x):
     return 1
 
+
+nogui = helper.nogui_from_args()
 
 n = 4
 a, c = 0, 1
@@ -38,12 +41,21 @@ errors = np.zeros(len(steps))
 for k in range(0, len(us)):
     errors[k] = np.linalg.norm(us[k] - real_values)
 
-
+plt.xlabel('x')
+plt.ylabel('u(x)')
 plt.figure(1)
-plt.plot(pts, real_values)
-plt.plot(pts, uh)
+plt.plot(pts, real_values, label='real solution')
+plt.plot(pts, uh, label='computed')
+plt.legend(loc='upper right')
+
+plt.savefig('demo_1_1.png')
 
 plt.figure(2)
+plt.xlabel('refinement step')
+plt.ylabel('error')
 plt.semilogy(steps, errors)
 
-plt.show()
+plt.savefig('demo_1_2.png')
+
+if not nogui:
+    plt.show()

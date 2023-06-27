@@ -2,7 +2,9 @@
 For 2023 Numerical Analysis Course Final Project.
 
 See through the `info.tex` for analysis 
-and some experiment results.
+and some experiment results. 
+(you can build it to info.pdf, 
+see instructions below)
 
 # Problem
 We want to solve 2-point boundary value problem:
@@ -24,7 +26,7 @@ the other has a linear or quadratic solution
 
 Our main reference is the article
 `A Fast Adaptive Numerical Method for Stiff Two-point Boundary Value Problems`
-by `June-Yub Lee` and `Leslie Greengard`. 
+by June-Yub Lee and Leslie Greengard. 
 
 This project is a toy program implementing the algorithm suggested by the article.
 
@@ -32,9 +34,11 @@ This project is a toy program implementing the algorithm suggested by the articl
 
 Interpreter: `python3`
 
-Dependencies: `numpy`
+Dependencies: `numpy`, `matplotlib`
 
-Recommend running on Linux.
+Recommend running on Linux or similar Unix-like platforms.
+
+However, when implementing in Python, it's not as fast as expected.
 
 # Running Demos
 
@@ -60,6 +64,17 @@ We compare the computed sigma function using two methods:
 ### `demo_1.py`, `demo_2.py`:
 Demonstration of toy problem 1, 2 
 (see description of the two problems at the end of this file)
+
+# Build PDF
+
+Build the pdf, run make:
+```bash
+$ make
+```
+clean, run:
+```bash
+$ make clean
+```
 
 # Install
 ```bash

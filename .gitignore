@@ -2,6 +2,14 @@
 .idea/
 
 *.pyc
+.pytest*
 
 build/
 *-info/
+
+# intermediate files for tex
+*.pdf
+*.png
+*.aux
+*.log
+*.toc

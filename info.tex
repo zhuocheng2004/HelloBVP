@@ -1,0 +1,200 @@
+\documentclass{article}
+
+\usepackage{graphicx}
+
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper, scale=0.90]{geometry}
+\usepackage{CJKutf8}
+
+\usepackage{wrapfig}
+
+\usepackage{float}
+
+\usepackage{caption}
+\usepackage{subcaption}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\usepackage{hyperref}
+
+% Usage: \begin{Chinese}中文\end{Chinese}
+\newenvironment{Chinese}
+{\begin{CJK}{UTF8}{gbsn}}
+{\end{CJK}}
+
+\title{
+    {2023 Spring Numerical Analyisis Course Project}
+}
+\author{\begin{Chinese}程卓\end{Chinese} (2021011617)}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+\section{Introduction}
+Code could be viewed on:
+
+\url{https://github.com/zhuocheng2004/Numerical-Analysis-2023/tree/main/HW5}
+
+\url{https://github.com/zhuocheng2004/Numerical-Analysis-2023/tree/main/HW5}
+
+NOTICE: many things are in the comments of the code.
+
+\section{Problem}
+Our goal is to solve the 2-point boundary problem:
+$$
+    u^{\prime\prime}(x) + p(x)u^\prime(x) + q(x)u(x) = f(x)
+$$
+on interval $[a, c]$
+with homogenous boundary condition:
+\begin{align}
+    \zeta_{l0} \cdot u(a) + \zeta_{l1} \cdot u^\prime(a) = 0 \\
+    \zeta_{r0} \cdot u(c) + \zeta_{r1} \cdot u^\prime(c) = 0
+\end{align}
+
+
+For any non-homogeneous boundary condition, 
+the system can be expressed as the sum of two system, 
+one has homogeneous boundary condition, 
+the other has a linear (or quadratic) solution.
+
+Our program implements the algorithm discussed in article 
+{\sl A Fast Adaptive Numerical Method for Stiff Two-point Boundary Value Problems}
+by June-Yub Lee and Leslie Greengard.
+
+I do not follow the algorithm directly presented in the article. 
+Instead, I implemented it based on my own understanding.
+
+The resulting accuracy and speed are not very good, compared to that in the paper.
+I have no time to investigate further.
+
+\section{Questions}
+\subsection{}
+
+\section{Demos}
+
+The following demos are run under environment:
+\bigskip
+
+Arch: amd64 (chip: AMD Ryzen 7 4800U with Radeon Graphics)
+
+OS: Ubuntu/Linux 22.04 jammy
+
+Python: 3.10.4
+
+Numpy: 1.22.4
+
+\subsection{demo\_sigma}
+
+This demo computes the function $\sigma$ in two ways: 
+
+1. use the whole interval.
+
+2. cut the interval into $2^6 = 64$ sub-intervals using a 6-level binary tree.
+
+Note: in whole interval case, we use 32 Chebyshev points. 
+If we use more points, we might encounter 'singular matrix' when computing.
+
+\begin{figure}[H]
+	\centering
+    \begin{subfigure}[h]{0.8\linewidth}
+	    \includegraphics[width=\textwidth]{demo_sigma.png}
+    \end{subfigure}
+\end{figure}
+
+\subsection{demo\_1}
+
+Problem to solve:
+$$
+    u^{\prime\prime}(x) = 1
+$$ on $[0, 1]$
+with boundary condition:
+$$
+    u(0) = u^\prime(1) = 0
+$$
+
+Actual solution:
+$$
+    u(x) = \frac12 x^2 - x
+$$
+
+\begin{figure}[H]
+	\centering
+	\begin{subfigure}[h]{0.45\linewidth}
+	    \includegraphics[width=\textwidth]{demo_1_1.png}
+    \end{subfigure}
+    \begin{subfigure}[h]{0.45\linewidth}
+	    \includegraphics[width=\textwidth]{demo_1_2.png}
+    \end{subfigure}
+\end{figure}
+
+Computing process ($L^\infty$ tolerance = $10^{-6}$):
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{l|r|r}
+        step & number of sub-intervals & relative error \\
+        \hline
+        1  &  1 & 0.011721620601999605 \\
+        2  &  2 & 0.002930405150499915 \\
+        3  &  4 & 0.0007326012876249788 \\
+        4  &  8 & 0.00018315032190635572 \\
+        5  & 16 & 4.578758047657505e-05 \\
+        6  & 32 & 1.1446895119615608e-05 \\
+        7  & 64 & 2.861723779834513e-06 \\
+    \end{tabular}
+    \caption{Refinement Process}
+\end{table}
+
+%%%%
+
+\subsection{demo\_2}
+
+Problem to solve:
+$$
+    u^{\prime\prime}(x) + u(x) = 1
+$$ on $[0, 6\pi]$
+with boundary condition:
+$$
+    u(0) = u^\prime(1) = 0
+$$
+
+Actual solution:
+$$
+    u(x) = 1 - \cos(x)
+$$
+
+\begin{figure}[H]
+	\centering
+	\begin{subfigure}[h]{0.45\linewidth}
+	    \includegraphics[width=\textwidth]{demo_2_1.png}
+    \end{subfigure}
+    \begin{subfigure}[h]{0.45\linewidth}
+	    \includegraphics[width=\textwidth]{demo_2_2.png}
+    \end{subfigure}
+\end{figure}
+
+Computing process ($L^\infty$ tolerance = $10^{-5}$):
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{l|r|r}
+        step & number of sub-intervals & relative error \\
+        \hline
+        1  &   1 & 0.829452231623173 \\
+        2  &   2 & 0.5111318209211012 \\
+        3  &   4 & 0.6073673296855024 \\
+        4  &   7 & 0.47093915469145464 \\
+        5  &  14 & 0.017375141481050405 \\
+        6  &  28 & 0.004070638153959535 \\
+        7  &  56 & 0.0008963125014674609 \\
+        8  & 109 & 0.0002365404017131197 \\
+        9  & 215 & 6.282202005296042e-05 \\
+    \end{tabular}
+    \caption{Refinement Process}
+\end{table}
+
+\end{document}
